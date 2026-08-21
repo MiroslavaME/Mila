@@ -2,7 +2,8 @@
 
 Repositorio de prácticas y laboratorios de la materia.
 
-## Integrantes 
+## Integrantes - Equipo Mila
+
 - Galindo Ruvalcaba Luis Adrián
 - Hernández Peréz José María
 - Mora Espinosa Miroslava
