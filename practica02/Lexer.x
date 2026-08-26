@@ -34,6 +34,7 @@ tokens :-
   -- Agrega aqui las reglas lexicas para:
   --   and, or, *, /, expt, <, >, <=, >=, eq, add1, sub1, zero?
   -- Recuerda reconocer <= y >= como tokens completos.
+  
   and                   { \_ -> TokenAnd }
   or                    { \_ -> TokenOr }
   '*'                   { \_ -> TokenMul }
