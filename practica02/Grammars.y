@@ -1,0 +1,92 @@
+{
+module Grammars where
+
+import Lexer (Token(..), lexer)
+}
+
+%name parse
+%tokentype { Token }
+%error { parseError }
+
+%token
+      nat             { TokenNum $$ }
+      bool            { TokenBool $$ }
+      '+'             { TokenSuma }
+      '-'             { TokenResta }
+      '*'             { TokenMul }
+      '/'             { TokenDiv }
+      "and"           { TokenAnd }
+      "or"            { TokenOr }
+      "not"           { TokenNot }
+      "add1"          { TokenAdd1 }
+      "sub1"          { TokenSub1 }
+      "zero?"         { TokenZeroP }
+      "expt"          { TokenExpt }
+      '<'             { TokenLT }
+      '>'             { TokenGT }
+      "<="            { TokenLE }
+      ">="            { TokenGE }
+      "eq"            { TokenEq }
+      '('             { TokenPA }
+      ')'             { TokenPC }
+
+%%
+
+ASA : nat                      { Num $1 }
+    | bool                     { Boolean $1 }
+
+-- RETO 2:
+-- Agrega las producciones para:
+--   * operadores n-arios con al menos dos argumentos;
+--   * operadores estrictamente binarios: expt y eq;
+--   * operadores unarios: not, add1, sub1, zero?.
+
+    | '(' '+' ASA ASA OPT ')'      { Add $3 : $4 : $5 }
+    | '(' '-' ASA ASA OPT ')'      { Sub $3 : $4 : $5 }
+    | '(' '*' ASA ASA OPT ')'      { Mul $3 : $4 : $5 }
+    | '(' '/' ASA ASA OPT ')'      { Div $3 : $4 : $5 }
+    | '(' "and" ASA ASA OPT ')'    { And $3 : $4 : $5 }
+    | '(' "or" ASA ASA OPT ')'     { Or $3 : $4 : $5 }
+    | '(' "not" ASA ')'            { Not $3 }
+    | '(' "add1" ASA ')'           { Add1 $3 }
+    | '(' "sub1" ASA ')'           { Sub1 $3 }
+    | '(' "zero?" ASA ')'          { ZeroP $3 }
+    | '(' "expt" ASA ASA ')'       { Expt $3 : $4 }
+    | '(' '<' ASA ASA OPT ')'      { Lt $3 : $4 : $5 }
+    | '(' '>' ASA ASA OPT ')'      { Gt $3 : $4 : $5 }
+    | '(' "<=" ASA ASA OPT ')'     { Le $3 : $4 : $5 }
+    | '(' ">=" ASA ASA OPT ')'     { Ge $3 : $4 : $5 }
+    | '(' "eq" ASA ASA ')'         { EqP $3 : $4 }
+
+-- RETO 3:
+-- Agrega un no terminal para representar dos o mas argumentos.
+-- El resultado debe ser una lista de ASA.
+
+OPT : {- vacio jeje -}         { [] }
+    | ASA OPT                  { $1 : $2 }
+
+{
+parseError :: [Token] -> a
+parseError toks = error ("Parse error: " ++ show toks)
+
+data ASA
+  = Num Int
+  | Boolean Bool
+  | And [ASA]
+  | Or [ASA]
+  | Add [ASA]
+  | Sub [ASA]
+  | Mul [ASA]
+  | Div [ASA]
+  | Lt [ASA]
+  | Gt [ASA]
+  | Le [ASA]
+  | Ge [ASA]
+  | Expt ASA ASA
+  | EqP ASA ASA
+  | Not ASA
+  | Add1 ASA
+  | Sub1 ASA
+  | ZeroP ASA
+  deriving (Eq, Show)
+}
