@@ -11,6 +11,7 @@ import Lexer (Token(..), lexer)
 %token
       nat             { TokenNum $$ }
       bool            { TokenBool $$ }
+
       '+'             { TokenSuma }
       '-'             { TokenResta }
       '*'             { TokenMul }
@@ -32,8 +33,8 @@ import Lexer (Token(..), lexer)
 
 %%
 
-ASA : nat                      { Num $1 }
-    | bool                     { Boolean $1 }
+ASA : nat                       { Num $1 }
+    | bool                      { Boolean $1 }
 
 -- RETO 2:
 -- Agrega las producciones para:
