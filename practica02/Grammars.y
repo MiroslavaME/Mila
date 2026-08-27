@@ -41,29 +41,29 @@ ASA : nat                      { Num $1 }
 --   * operadores estrictamente binarios: expt y eq;
 --   * operadores unarios: not, add1, sub1, zero?.
 
-    | '(' '+' ASA ASA OPT ')'      { Add $3 : $4 : $5 }
-    | '(' '-' ASA ASA OPT ')'      { Sub $3 : $4 : $5 }
-    | '(' '*' ASA ASA OPT ')'      { Mul $3 : $4 : $5 }
-    | '(' '/' ASA ASA OPT ')'      { Div $3 : $4 : $5 }
-    | '(' "and" ASA ASA OPT ')'    { And $3 : $4 : $5 }
-    | '(' "or" ASA ASA OPT ')'     { Or $3 : $4 : $5 }
+    | '(' '+' ASA ASA OPT ')'      { Add ([$3] ++ [$4] ++ $5) }
+    | '(' '-' ASA ASA OPT ')'      { Sub ([$3] ++ [$4] ++ $5) }
+    | '(' '*' ASA ASA OPT ')'      { Mul ([$3] ++ [$4] ++ $5) }
+    | '(' '/' ASA ASA OPT ')'      { Div ([$3] ++ [$4] ++ $5) }
+    | '(' "and" ASA ASA OPT ')'    { And ([$3] ++ [$4] ++ $5) }
+    | '(' "or" ASA ASA OPT ')'     { Or ([$3] ++ [$4] ++ $5) }
     | '(' "not" ASA ')'            { Not $3 }
     | '(' "add1" ASA ')'           { Add1 $3 }
     | '(' "sub1" ASA ')'           { Sub1 $3 }
     | '(' "zero?" ASA ')'          { ZeroP $3 }
-    | '(' "expt" ASA ASA ')'       { Expt $3 : $4 }
-    | '(' '<' ASA ASA OPT ')'      { Lt $3 : $4 : $5 }
-    | '(' '>' ASA ASA OPT ')'      { Gt $3 : $4 : $5 }
-    | '(' "<=" ASA ASA OPT ')'     { Le $3 : $4 : $5 }
-    | '(' ">=" ASA ASA OPT ')'     { Ge $3 : $4 : $5 }
-    | '(' "eq" ASA ASA ')'         { EqP $3 : $4 }
+    | '(' "expt" ASA ASA ')'       { Expt $3 $4 }
+    | '(' '<' ASA ASA OPT ')'      { Lt ([$3] ++ [$4] ++ $5) }
+    | '(' '>' ASA ASA OPT ')'      { Gt ([$3] ++ [$4] ++ $5) }
+    | '(' "<=" ASA ASA OPT ')'     { Le ([$3] ++ [$4] ++ $5) }
+    | '(' ">=" ASA ASA OPT ')'     { Ge ([$3] ++ [$4] ++ $5) }
+    | '(' "eq" ASA ASA ')'         { EqP $3 $4 }
 
 -- RETO 3:
 -- Agrega un no terminal para representar dos o mas argumentos.
 -- El resultado debe ser una lista de ASA.
 
 OPT : {- vacio jeje -}         { [] }
-    | ASA OPT                  { $1 : $2 }
+    | ASA OPT                  { [$1] ++ $2 }
 
 {
 parseError :: [Token] -> a

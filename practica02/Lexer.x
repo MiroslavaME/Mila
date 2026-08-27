@@ -36,8 +36,8 @@ tokens :-
   -- Recuerda reconocer <= y >= como tokens completos.
   and                   { \_ -> TokenAnd }
   or                    { \_ -> TokenOr }
-  '*'                   { \_ -> TokenMul }
-  '/'                   { \_ -> TokenDiv }
+  \*                   { \_ -> TokenMul }
+  \/                   { \_ -> TokenDiv }
   expt                  { \_ -> TokenExpt }
   \<                   { \_ -> TokenLT }
   \>                   { \_ -> TokenGT }
