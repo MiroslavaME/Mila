@@ -54,13 +54,13 @@ ASA : var                            { Id $1 }
     | '(' "add1" ASA ')'            { Add1 $3 }
     | '(' "sub1" ASA ')'            { Sub1 $3 }
     | '(' "zero?" ASA ')'           { ZeroP $3 }
-    | '(' "let" Binding ASA ')'     { Let $3 $4 }
-    | '(' "let*" Bindings ASA ')'   { LetStar $3 $4 }
+    | '(' "let" '(' Bindings ')' ASA ')'    { Let $3 $4 }
+    | '(' "let*" '(' Bindings ')' ASA ')'   { LetStar $3 $4 }
 
-Binding : '(' id ',' ASA ')'        { Binding $2 $4 }
+Binding : '(' var ASA ')'       { ($2,$4) }
 
-Bindings : {- nada saludos -}       { [] }
-           Binding Bindings         { $1 $2 }
+Bindings : Binding                  { $1 }
+           Binding Bindings         { $1:$2 }
 
 -- RETO 2
 -- Completa las producciones para:
