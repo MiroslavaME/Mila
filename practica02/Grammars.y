@@ -1,7 +1,7 @@
 {
 module Grammars where
 
-import Lexer (Token(..), lexer)
+import Lexer (Token(..))
 }
 
 %name parse
@@ -9,9 +9,9 @@ import Lexer (Token(..), lexer)
 %error { parseError }
 
 %token
+      var             { TokenId $$ }
       nat             { TokenNum $$ }
       bool            { TokenBool $$ }
-
       '+'             { TokenSuma }
       '-'             { TokenResta }
       '*'             { TokenMul }
@@ -28,50 +28,59 @@ import Lexer (Token(..), lexer)
       "<="            { TokenLE }
       ">="            { TokenGE }
       "eq"            { TokenEq }
+      "let"           { TokenLet }
+      "let*"          { TokenLetStar }
       '('             { TokenPA }
       ')'             { TokenPC }
 
 %%
 
-ASA : nat                       { Num $1 }
-    | bool                      { Boolean $1 }
+ASA : var                            { Id $1 }
+    | nat                           { Num $1 }
+    | bool                          { Boolean $1 }
+    | '(' '+' Args ')'              { Add $3 }
+    | '(' '-' Args ')'              { Sub $3 }
+    | '(' '*' Args ')'              { Mul $3 }
+    | '(' '/' Args ')'              { Div $3 }
+    | '(' "and" Args ')'            { And $3 }
+    | '(' "or" Args ')'             { Or $3 }
+    | '(' '<' Args ')'              { Lt $3 }
+    | '(' '>' Args ')'              { Gt $3 }
+    | '(' "<=" Args ')'             { Le $3 }
+    | '(' ">=" Args ')'             { Ge $3 }
+    | '(' "expt" ASA ASA ')'        { Expt $3 $4 }
+    | '(' "eq" ASA ASA ')'          { EqP $3 $4 }
+    | '(' "not" ASA ')'             { Not $3 }
+    | '(' "add1" ASA ')'            { Add1 $3 }
+    | '(' "sub1" ASA ')'            { Sub1 $3 }
+    | '(' "zero?" ASA ')'           { ZeroP $3 }
+    | '(' "let" Binding ASA ')'     { Let $3 $4 }
+    | '(' "let*" Bindings ASA ')'   { LetStar $3 $4 }
 
--- RETO 2:
--- Agrega las producciones para:
---   * operadores n-arios con al menos dos argumentos;
---   * operadores estrictamente binarios: expt y eq;
---   * operadores unarios: not, add1, sub1, zero?.
+Binding : '(' id ',' ASA ')'        { Binding $2 $4 }
 
-    | '(' '+' ASA ASA OPT ')'      { Add ([$3] ++ [$4] ++ $5) }
-    | '(' '-' ASA ASA OPT ')'      { Sub ([$3] ++ [$4] ++ $5) }
-    | '(' '*' ASA ASA OPT ')'      { Mul ([$3] ++ [$4] ++ $5) }
-    | '(' '/' ASA ASA OPT ')'      { Div ([$3] ++ [$4] ++ $5) }
-    | '(' "and" ASA ASA OPT ')'    { And ([$3] ++ [$4] ++ $5) }
-    | '(' "or" ASA ASA OPT ')'     { Or ([$3] ++ [$4] ++ $5) }
-    | '(' "not" ASA ')'            { Not $3 }
-    | '(' "add1" ASA ')'           { Add1 $3 }
-    | '(' "sub1" ASA ')'           { Sub1 $3 }
-    | '(' "zero?" ASA ')'          { ZeroP $3 }
-    | '(' "expt" ASA ASA ')'       { Expt $3 $4 }
-    | '(' '<' ASA ASA OPT ')'      { Lt ([$3] ++ [$4] ++ $5) }
-    | '(' '>' ASA ASA OPT ')'      { Gt ([$3] ++ [$4] ++ $5) }
-    | '(' "<=" ASA ASA OPT ')'     { Le ([$3] ++ [$4] ++ $5) }
-    | '(' ">=" ASA ASA OPT ')'     { Ge ([$3] ++ [$4] ++ $5) }
-    | '(' "eq" ASA ASA ')'         { EqP $3 $4 }
+Bindings : {- nada saludos -}       { [] }
+           Binding Bindings         { $1 $2 }
 
--- RETO 3:
--- Agrega un no terminal para representar dos o mas argumentos.
--- El resultado debe ser una lista de ASA.
+-- RETO 2
+-- Completa las producciones para:
+--   * identificadores;
+--   * let multiparametrico con una o mas asociaciones;
+--   * let* con una o mas asociaciones;
 
-OPT : {- vacio jeje -}         { [] }
-    | ASA OPT                  { [$1] ++ $2 }
+
+Args : ASA ASA                       { [$1, $2] }
+     | ASA Args                      { $1 : $2 }
 
 {
 parseError :: [Token] -> a
 parseError toks = error ("Parse error: " ++ show toks)
 
+type Binding = (String, ASA)
+
 data ASA
-  = Num Int
+  = Id String
+  | Num Int
   | Boolean Bool
   | And [ASA]
   | Or [ASA]
@@ -89,5 +98,7 @@ data ASA
   | Add1 ASA
   | Sub1 ASA
   | ZeroP ASA
+  | Let [Binding] ASA
+  | LetStar [Binding] ASA
   deriving (Eq, Show)
 }
