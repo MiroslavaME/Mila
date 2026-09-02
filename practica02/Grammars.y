@@ -35,31 +35,31 @@ import Lexer (Token(..))
 
 %%
 
-ASA : var                            { Id $1 }
-    | nat                           { Num $1 }
-    | bool                          { Boolean $1 }
-    | '(' '+' Args ')'              { Add $3 }
-    | '(' '-' Args ')'              { Sub $3 }
-    | '(' '*' Args ')'              { Mul $3 }
-    | '(' '/' Args ')'              { Div $3 }
-    | '(' "and" Args ')'            { And $3 }
-    | '(' "or" Args ')'             { Or $3 }
-    | '(' '<' Args ')'              { Lt $3 }
-    | '(' '>' Args ')'              { Gt $3 }
-    | '(' "<=" Args ')'             { Le $3 }
-    | '(' ">=" Args ')'             { Ge $3 }
-    | '(' "expt" ASA ASA ')'        { Expt $3 $4 }
-    | '(' "eq" ASA ASA ')'          { EqP $3 $4 }
-    | '(' "not" ASA ')'             { Not $3 }
-    | '(' "add1" ASA ')'            { Add1 $3 }
-    | '(' "sub1" ASA ')'            { Sub1 $3 }
-    | '(' "zero?" ASA ')'           { ZeroP $3 }
-    | '(' "let" '(' Bindings ')' ASA ')'    { Let $3 $4 }
-    | '(' "let*" '(' Bindings ')' ASA ')'   { LetStar $3 $4 }
+ASA : var                                   { Id $1 }
+    | nat                                   { Num $1 }
+    | bool                                  { Boolean $1 }
+    | '(' '+' Args ')'                      { Add $3 }
+    | '(' '-' Args ')'                      { Sub $3 }
+    | '(' '*' Args ')'                      { Mul $3 }
+    | '(' '/' Args ')'                      { Div $3 }
+    | '(' "and" Args ')'                    { And $3 }
+    | '(' "or" Args ')'                     { Or $3 }
+    | '(' '<' Args ')'                      { Lt $3 }
+    | '(' '>' Args ')'                      { Gt $3 }
+    | '(' "<=" Args ')'                     { Le $3 }
+    | '(' ">=" Args ')'                     { Ge $3 }
+    | '(' "expt" ASA ASA ')'                { Expt $3 $4 }
+    | '(' "eq" ASA ASA ')'                  { EqP $3 $4 }
+    | '(' "not" ASA ')'                     { Not $3 }
+    | '(' "add1" ASA ')'                    { Add1 $3 }
+    | '(' "sub1" ASA ')'                    { Sub1 $3 }
+    | '(' "zero?" ASA ')'                   { ZeroP $3 }
+    | '(' "let" '(' Bindings ')' ASA ')'    { Let $4 $6 }
+    | '(' "let*" '(' Bindings ')' ASA ')'   { LetStar $4 $6 }
 
-Binding : '(' var ASA ')'       { ($2,$4) }
+Binding : '(' var ASA ')'       { ($2,$3) }
 
-Bindings : Binding                  { $1 }
+Bindings : Binding                  { [$1] }
            Binding Bindings         { $1:$2 }
 
 -- RETO 2
