@@ -91,3 +91,101 @@ sustMany :: ASA -> [Binding] -> ASA
 -- RETO 4: semantica operacional de paso grande
 -- let es simultaneo; let* se evalua directamente, asociacion por asociacion.
 bigStep :: ASA -> Maybe ASA
+bigStep (Num n)     = Just (Num n)
+bigStep (Boolean b) = Just (Boolean b)
+bigStep (Id _)      = Nothing
+
+bigStep (Add args) = case evalNums args of
+  Just ns -> Just (Num (sum ns))
+  Nothing -> Nothing
+
+bigStep (Mul args) = case evalNums args of
+  Just ns -> Just (Num (product ns))
+  Nothing -> Nothing
+
+bigStep (Sub args) = case evalNums args of
+  Just (x:xs) -> Just (Num (foldl (\acc y -> max 0 (acc - y)) x xs))
+  Just []     -> Just (Num 0)
+  Nothing     -> Nothing
+
+bigStep (Div args) = case evalNums args of
+  Just (x:xs) | not (null xs) && notElem 0 xs -> Just (Num (foldl div x xs))
+  _                                           -> Nothing
+
+bigStep (And args) = case evalBools args of
+  Just bs -> Just (Boolean (and bs))
+  Nothing -> Nothing
+
+bigStep (Or args) = case evalBools args of
+  Just bs -> Just (Boolean (or bs))
+  Nothing -> Nothing
+
+bigStep (Lt args) = case evalNums args of
+  Just ns -> Just (Boolean (compara (<) ns))
+  Nothing -> Nothing
+
+bigStep (Gt args) = case evalNums args of
+  Just ns -> Just (Boolean (compara (>) ns))
+  Nothing -> Nothing
+
+bigStep (Le args) = case evalNums args of
+  Just ns -> Just (Boolean (compara (<=) ns))
+  Nothing -> Nothing
+
+bigStep (Ge args) = case evalNums args of
+  Just ns -> Just (Boolean (compara (>=) ns))
+  Nothing -> Nothing
+
+bigStep (Expt e1 e2) = case (evalNum e1, evalNum e2) of
+  (Just n1, Just n2) -> Just (Num (n1 ^ n2))
+  _                  -> Nothing
+
+bigStep (EqP e1 e2) = case (bigStep e1, bigStep e2) of
+  (Just (Num n1), Just (Num n2))         -> Just (Boolean (n1 == n2))
+  (Just (Boolean b1), Just (Boolean b2)) -> Just (Boolean (b1 == b2))
+  _                                      -> Nothing
+
+bigStep (Not e) = case bigStep e of
+  Just (Boolean b) -> Just (Boolean (not b))
+  Just (Num _)     -> Just (Boolean False)
+  _                -> Nothing
+
+bigStep (Add1 e) = case evalNum e of
+  Just n  -> Just (Num (n + 1))
+  Nothing -> Nothing
+
+bigStep (Sub1 e) = case evalNum e of
+  Just n  -> Just (Num (max 0 (n - 1)))
+  Nothing -> Nothing
+
+bigStep (ZeroP e) = case evalNum e of
+  Just n  -> Just (Boolean (n == 0))
+  Nothing -> Nothing
+
+--funciones auxiliares para ahorrar codigo
+evalNum :: ASA -> Maybe Int
+evalNum e = case bigStep e of
+  Just (Num n) -> Just n
+  _            -> Nothing
+
+evalBool :: ASA -> Maybe Bool
+evalBool e = case bigStep e of
+  Just (Boolean b) -> Just b
+  _                -> Nothing
+
+evalNums :: [ASA] -> Maybe [Int]
+evalNums args = 
+  let res = map evalNum args
+  in if all (/= Nothing) res
+     then Just [n | Just n <- res]
+     else Nothing
+
+evalBools :: [ASA] -> Maybe [Bool]
+evalBools args = 
+  let res = map evalBool args
+  in if all (/= Nothing) res
+     then Just [b | Just b <- res]
+     else Nothing
+
+compara :: (a -> a -> Bool) -> [a] -> Bool
+compara op xs = and [op x y | (x, y) <- zip xs (tail xs)]
