@@ -197,7 +197,7 @@ daFresh n ocupados =
 -- RETO 4: semantica operacional de paso grande
 -- let es simultaneo; let* se evalua directamente, asociacion por asociacion.
 
---funciones auxiliares para ahorrar codigo
+-- funciones auxiliares para ahorrar codigo
 evalNum :: ASA -> Maybe Int
 evalNum e = case bigStep e of
   Just (Num n) -> Just n
@@ -223,15 +223,24 @@ evalBools args =
      else Nothing
 
 compara :: (a -> a -> Bool) -> [a] -> Bool
-compara op xs = and [op x y | (x, y) <- zip xs (tail xs)]
+compara _ []          = True
+compara _ [_]         = True
+compara op (x1:x2:xs) =
+  case op x1 x2 of
+    True  -> compara op (x2:xs)
+    False -> False
 
-evalValues :: [(String, ASA)] -> Maybe [(String, ASA)]
+evalValues :: [Binding] -> Maybe [Binding]
 evalValues [] = Just []
 evalValues ((x, expr) : xs) = case bigStep expr of
   Just val -> case evalValues xs of
-    Just y -> Just ((x, val) : y)
+    Just y  -> Just ((x, val) : y)
     Nothing -> Nothing
   Nothing  -> Nothing
+
+tieneDuplicados :: [String] -> Bool
+tieneDuplicados []     = False
+tieneDuplicados (x:xs) = elem x xs || tieneDuplicados xs
 
 
 bigStep :: ASA -> Maybe ASA
@@ -281,6 +290,7 @@ bigStep (Ge args) = case evalNums args of
   Nothing -> Nothing
 
 bigStep (Expt e1 e2) = case (evalNum e1, evalNum e2) of
+  (Just 0, Just 0)   -> Nothing
   (Just n1, Just n2) -> Just (Num (n1 ^ n2))
   _                  -> Nothing
 
@@ -306,16 +316,15 @@ bigStep (ZeroP e) = case evalNum e of
   Just n  -> Just (Boolean (n == 0))
   Nothing -> Nothing
 
-bigStep (Let values body) = case evalValues values of
-  Just sustValues -> 
-    let body' = foldl (\acc (x, val) -> sust acc x val) body sustValues
-    in bigStep body'
-  Nothing -> Nothing
+bigStep (Let values body)
+  | tieneDuplicados (varsLigadas values) = Nothing
+  | otherwise = case evalValues values of
+      Just sustValues -> bigStep (sustMany body sustValues)
+      Nothing         -> Nothing
 
 bigStep (LetStar [] body) = bigStep body
 bigStep (LetStar ((x, expr) : xs) body) = case bigStep expr of
-  Just val -> 
-    let xs'   = [(y, sust e x val) | (y, e) <- xs]
-        body' = sust body x val
+  Just val ->
+    let LetStar xs' body' = sust (LetStar xs body) x val
     in bigStep (LetStar xs' body')
-  Nothing  -> Nothing
+  Nothing -> Nothing
