@@ -65,12 +65,12 @@ ASA : nat                           { Num $1 }
     | '(' "let*" '(' Bindings ')' ASA ')'     { LetStar $4 $6 }
 
 Args : ASA ASA                       { [$1, $2] }
-     | Args ASA                      { $1 : $2 }
+     | Args ASA                      { $1 ++ [$2] }
 
 Binding : '(' var ASA ')'            { ($2, $3) }
 
 Bindings : Binding                   { [$1] }
-         | Bindings Binding          { $1 : $2 }
+         | Bindings Binding          { $1 ++ [$2] }
 
 {
 parseError :: [Token] -> a
