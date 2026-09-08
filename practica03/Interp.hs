@@ -139,7 +139,7 @@ sust (Let bs body) x v =
 
 sust (LetStar [] body) x v = LetStar [] (sust body x v)
 sust (LetStar ((y, ey) : xs) body) x v
-  | y == x =
+  | y == x = 
       LetStar ((y, sust ey x v) : xs) body
   | elem y (freeVars v) =
       let ocupados = names (LetStar ((y, ey) : xs) body) ++ names v ++ [x]
@@ -307,13 +307,15 @@ bigStep (ZeroP e) = case evalNum e of
   Nothing -> Nothing
 
 bigStep (Let values body) = case evalValues values of
-  Just sustValues -> bigStep (sustMany body sustValues)
-  Nothing            -> Nothing
+  Just sustValues -> 
+    let body' = foldl (\acc (x, val) -> sust acc x val) body sustValues
+    in bigStep body'
+  Nothing -> Nothing
 
 bigStep (LetStar [] body) = bigStep body
 bigStep (LetStar ((x, expr) : xs) body) = case bigStep expr of
   Just val -> 
-    let xs'   = map (\(y, e) -> (y, sust e x val)) xs
+    let xs'   = [(y, sust e x val) | (y, e) <- xs]
         body' = sust body x val
     in bigStep (LetStar xs' body')
-  Nothing -> Nothing
+  Nothing  -> Nothing
