@@ -73,12 +73,12 @@ names (Le es)       = namesList es
 names (Ge es)       = namesList es
 
 names (Let [] body)            = names body
-names (Let ((x, e) : bs) body) =
-  [x] ++ names e ++ names (Let bs body)
+names (Let ((x, e) : xs) body) =
+  [x] ++ names e ++ names (Let xs body)
 
 names (LetStar [] body)            = names body
-names (LetStar ((x, e) : bs) body) =
-  [x] ++ names e ++ names (LetStar bs body)
+names (LetStar ((x, e) : xs) body) =
+  [x] ++ names e ++ names (LetStar xs body)
 
 
 freshName :: [String] -> String
@@ -90,6 +90,44 @@ sustMany :: ASA -> [Binding] -> ASA
 
 -- RETO 4: semantica operacional de paso grande
 -- let es simultaneo; let* se evalua directamente, asociacion por asociacion.
+
+--funciones auxiliares para ahorrar codigo
+evalNum :: ASA -> Maybe Int
+evalNum e = case bigStep e of
+  Just (Num n) -> Just n
+  _            -> Nothing
+
+evalBool :: ASA -> Maybe Bool
+evalBool e = case bigStep e of
+  Just (Boolean b) -> Just b
+  _                -> Nothing
+
+evalNums :: [ASA] -> Maybe [Int]
+evalNums args = 
+  let res = map evalNum args
+  in if all (/= Nothing) res
+     then Just [n | Just n <- res]
+     else Nothing
+
+evalBools :: [ASA] -> Maybe [Bool]
+evalBools args = 
+  let res = map evalBool args
+  in if all (/= Nothing) res
+     then Just [b | Just b <- res]
+     else Nothing
+
+compara :: (a -> a -> Bool) -> [a] -> Bool
+compara op xs = and [op x y | (x, y) <- zip xs (tail xs)]
+
+evalValues :: [(String, ASA)] -> Maybe [(String, ASA)]
+evalValues [] = Just []
+evalValues ((x, expr) : xs) = case bigStep expr of
+  Just val -> case evalValues xs of
+    Just y -> Just ((x, val) : y)
+    Nothing -> Nothing
+  Nothing  -> Nothing
+
+
 bigStep :: ASA -> Maybe ASA
 bigStep (Num n)     = Just (Num n)
 bigStep (Boolean b) = Just (Boolean b)
@@ -113,11 +151,11 @@ bigStep (Div args) = case evalNums args of
   _                                           -> Nothing
 
 bigStep (And args) = case evalBools args of
-  Just bs -> Just (Boolean (and bs))
+  Just xs -> Just (Boolean (and xs))
   Nothing -> Nothing
 
 bigStep (Or args) = case evalBools args of
-  Just bs -> Just (Boolean (or bs))
+  Just xs -> Just (Boolean (or xs))
   Nothing -> Nothing
 
 bigStep (Lt args) = case evalNums args of
@@ -162,30 +200,14 @@ bigStep (ZeroP e) = case evalNum e of
   Just n  -> Just (Boolean (n == 0))
   Nothing -> Nothing
 
---funciones auxiliares para ahorrar codigo
-evalNum :: ASA -> Maybe Int
-evalNum e = case bigStep e of
-  Just (Num n) -> Just n
-  _            -> Nothing
+bigStep (Let values body) = case evalValues values of
+  Just cleanBindings -> bigStep (sustMany body cleanBindings)
+  Nothing            -> Nothing
 
-evalBool :: ASA -> Maybe Bool
-evalBool e = case bigStep e of
-  Just (Boolean b) -> Just b
-  _                -> Nothing
-
-evalNums :: [ASA] -> Maybe [Int]
-evalNums args = 
-  let res = map evalNum args
-  in if all (/= Nothing) res
-     then Just [n | Just n <- res]
-     else Nothing
-
-evalBools :: [ASA] -> Maybe [Bool]
-evalBools args = 
-  let res = map evalBool args
-  in if all (/= Nothing) res
-     then Just [b | Just b <- res]
-     else Nothing
-
-compara :: (a -> a -> Bool) -> [a] -> Bool
-compara op xs = and [op x y | (x, y) <- zip xs (tail xs)]
+bigStep (LetStar [] body) = bigStep body
+bigStep (LetStar ((x, expr) : xs) body) = case bigStep expr of
+  Just val -> 
+    let xs'   = map (\(y, e) -> (y, sust e x val)) xs
+        body' = sust body x val
+    in bigStep (LetStar xs' body')
+  Nothing -> Nothing
