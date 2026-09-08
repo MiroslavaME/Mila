@@ -307,7 +307,7 @@ bigStep (ZeroP e) = case evalNum e of
   Nothing -> Nothing
 
 bigStep (Let values body) = case evalValues values of
-  Just cleanBindings -> bigStep (sustMany body cleanBindings)
+  Just sustValues -> bigStep (sustMany body sustValues)
   Nothing            -> Nothing
 
 bigStep (LetStar [] body) = bigStep body
