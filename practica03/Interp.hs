@@ -2,7 +2,7 @@ module Interp where
 
 import Grammars
 
--- Auxs para listas de expresiones y ligaduras
+-- Aux para listas de expresiones y ligaduras
 
 fvList :: [ASA] -> [String]
 fvList []     = []
@@ -104,7 +104,6 @@ freshName ocupados =
     (nom : _) -> nom
     []        -> "v0"
 
-
 sust :: ASA -> String -> ASA -> ASA
 sust (Num n) _ _       = Num n
 sust (Boolean b) _ _   = Boolean b
@@ -166,10 +165,8 @@ alfaRenombrarLet ((y, ey) : bs) body fvv
   | otherwise =
       let (bs', body') = alfaRenombrarLet bs body fvv
       in ((y, ey) : bs', body')
-
-
+      
 sustMany :: ASA -> [Binding] -> ASA
-
 
 -- RETO 4: semantica operacional de paso grande
 -- let es simultaneo; let* se evalua directamente, asociacion por asociacion.
