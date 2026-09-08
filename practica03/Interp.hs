@@ -167,7 +167,33 @@ alfaRenombrarLet ((y, ey) : bs) body fvv
       in ((y, ey) : bs', body')
       
 sustMany :: ASA -> [Binding] -> ASA
+sustMany expr [] = expr
+sustMany expr bs =
+  let ocupados = names expr ++ varsLigadas bs ++ namesBindings bs
+      frescos  = daFresh (length bs) ocupados
+      exprTemp = renombraIntermedios expr bs frescos
+  in aplicaValores exprTemp frescos bs
 
+renombraIntermedios :: ASA -> [Binding] -> [String] -> ASA
+renombraIntermedios cuerpo [] _ = cuerpo
+renombraIntermedios cuerpo _ [] = cuerpo
+renombraIntermedios cuerpo ((x, _) : bs) (z : zs) =
+  let cuerpo' = sust cuerpo x (Id z)
+  in renombraIntermedios cuerpo' bs zs
+
+aplicaValores :: ASA -> [String] -> [Binding] -> ASA
+aplicaValores cuerpo [] _ = cuerpo
+aplicaValores cuerpo _ [] = cuerpo
+aplicaValores cuerpo (z : zs) ((_, e) : bs) =
+  let cuerpo' = sust cuerpo z e
+  in aplicaValores cuerpo' zs bs
+
+daFresh :: Int -> [String] -> [String]
+daFresh 0 _ = []
+daFresh n ocupados =
+  let z = freshName ocupados
+  in z : daFresh (n - 1) (z : ocupados)
+  
 -- RETO 4: semantica operacional de paso grande
 -- let es simultaneo; let* se evalua directamente, asociacion por asociacion.
 
