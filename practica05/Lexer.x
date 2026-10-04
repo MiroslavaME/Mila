@@ -37,7 +37,10 @@ tokens :-
   0$digit+              { \s -> error ("Lexical error: natural con cero inicial = "
                                       ++ show s) }
   @nat                  { \s -> TokenNum (read s) }
-
+  if                    { \_ -> TokenIf }
+  cond                  { \_ -> TokenCond }
+  else                  { \_ -> TokenElse }
+  letrec                { \_ -> TokenLetRec }
   $letter$idrest*       { \s -> TokenId s }
 
   .                     { \s -> error ("Lexical error: caracter no reconocido = "
