@@ -1,0 +1,18 @@
+# Archivos generados por Alex y Happy (se regeneran desde Lexer.x y Grammars.y)
+Lexer.hs
+Grammars.hs
+
+# Salida de compilacion de GHC
+*.o
+*.hi
+*.dyn_o
+*.dyn_hi
+dist-newstyle/
+.ghc.environment.*
+
+# Ejecutables de prueba
+TestLaboratorio[0-9][0-9]
+pruebas*
+
+# Sistema
+.DS_Store
